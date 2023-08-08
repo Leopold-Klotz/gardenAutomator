@@ -1,5 +1,5 @@
 from kivy.app import App
-from kivy.uix.screenmanager import ScreenManager, Screen, NoTransition
+from kivy.uix.screenmanager import Screen
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.boxlayout import BoxLayout
@@ -8,7 +8,6 @@ from kivy.uix.label import Label
 from kivy.graphics import Color, Rectangle
 from kivy.utils import get_color_from_hex
 from kivy.uix.switch import Switch
-
 
 primary_light = '#93BF8B'
 primary_mid = '#5F8A6B'
@@ -33,9 +32,8 @@ class BackgroundWidget(FloatLayout):
         self.rect.pos = self.pos
         self.rect.size = self.size
 
-
-
 class HomeScreen(Screen):
+    name = 'home'
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -104,8 +102,8 @@ class HomeScreen(Screen):
         app = App.get_running_app()
         app.root.current = 'load'
 
-
 class LoadScreen(Screen):
+    name = 'load'
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -255,6 +253,7 @@ class LoadScreen(Screen):
         app.root.current = 'envMonitor'
 
 class EnvControl(Screen):
+    name = 'envControl'
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -331,7 +330,7 @@ class EnvControl(Screen):
             background_normal = ''
         )
 
-        # add to subheadind and bind button press
+        # add to subheading and bind button press
         self.subheading.add_widget(self.subheading_text)
         self.subheading.add_widget(self.subheadingButton)
         # self.subheadingButton.bind(on_press=self.switch_screen)
@@ -473,6 +472,7 @@ class EnvControl(Screen):
             print('Fan is off')
 
 class EnvMonitor(Screen):
+    name = 'envMonitor'
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -663,28 +663,3 @@ class EnvMonitor(Screen):
         print('The button <%s> is being pressed' % instance.text)
         app = App.get_running_app()
         app.root.current = 'envMonitor'
-
-
-
-class GardenAutomator(App):
-    def build(self):
-        # Create the root Screen Manager
-        self.screen_manager = ScreenManager(
-            transition = NoTransition()
-        )
-
-        # Create the screens and add them to the screen manager
-        self.home_screen = HomeScreen(name='home')
-        self.load_screen = LoadScreen(name='load')
-        self.env_control = EnvControl(name='envControl')
-        self.env_monitor = EnvMonitor(name='envMonitor')
-        self.screen_manager.add_widget(self.home_screen)
-        self.screen_manager.add_widget(self.load_screen)
-        self.screen_manager.add_widget(self.env_control)
-        self.screen_manager.add_widget(self.env_monitor)
-
-        return self.screen_manager
-
-
-if __name__ == '__main__':
-    GardenAutomator().run()
