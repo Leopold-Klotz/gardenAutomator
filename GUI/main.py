@@ -1,6 +1,6 @@
 from kivy.app import App
 from kivy.uix.screenmanager import ScreenManager, NoTransition
-from screens2 import HomeScreen, LoadScreen, EnvControl, EnvMonitor
+from screens import HomeScreen, LoadScreen, EnvControl, EnvMonitor
 
 class GardenAutomatorApp(App):
     def build(self):
