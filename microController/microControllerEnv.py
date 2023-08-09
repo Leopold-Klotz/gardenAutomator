@@ -5,9 +5,9 @@ from sensor import Sensor
 from relay import Relay
 
 # wifi information
-from secrets import SECRETS
-SSID = SECRETS["wifi_ssid"]
-PSK = SECRETS["wifi_password"]
+from secrets import SECRET
+SSID = SECRET["ssid"]
+PSK = SECRET["password"]
 
 
 class MicroControllerEnv():

@@ -1,5 +1,4 @@
 import dht
-import time
 import machine
 
 class Sensor():
