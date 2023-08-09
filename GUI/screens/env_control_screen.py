@@ -74,23 +74,35 @@ class EnvControl(Env):
     def fan_on(self, instance, value):
         if value:
             print('Fan is on')
+            self.send_message({'Fan': True})
         else:
             print('Fan is off')
+            self.send_message({'Fan': False})
 
     def fan_off(self, instance, value):
         if value:
             print('Fan is on')
+            self.send_message({'Fan': True})
         else:
             print('Fan is off')
+            self.send_message({'Fan': False})
 
     def light_on(self, instance, value):
         if value:
             print('Light is on')
+            self.send_message({'Lights': True})
         else:
             print('Light is off')
+            self.send_message({'Lights': False})
 
     def light_off(self, instance, value):
         if value:
             print('Light is on')
+            self.send_message({'Lights': True})
         else:
             print('Light is off')
+            self.send_message({'Lights': False})
+
+    def send_message(self, message):
+        app = App.get_running_app()
+        app.protocol.send_data(message)

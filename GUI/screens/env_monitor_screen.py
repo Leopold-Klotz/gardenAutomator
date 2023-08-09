@@ -1,6 +1,7 @@
 from kivy.app import App
 from kivy.uix.label import Label
 from kivy.uix.gridlayout import GridLayout
+import asyncio
 
 from .colors import *
 from .env import Env
@@ -55,3 +56,10 @@ class EnvMonitor(Env):
         print('The button <%s> is being pressed' % self.backButton.text)
         app = App.get_running_app()
         app.root.current = 'load'
+
+    async def start_receiving(self):
+        app = App.get_running_app()
+        while True:
+            data = await app.protocol.receive_data()
+            self.tempValue.text = str(data['Temperature'])
+            self.humidValue.text = str(data['Humidity'])
