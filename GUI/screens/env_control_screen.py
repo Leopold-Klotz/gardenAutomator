@@ -106,3 +106,7 @@ class EnvControl(Env):
     def send_message(self, message):
         app = App.get_running_app()
         app.protocol.send_data(message)
+
+    def update_data(self, light, fan):
+        self.fanSwitch.active = fan
+        self.lightSwitch.active = light

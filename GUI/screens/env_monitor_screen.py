@@ -1,7 +1,6 @@
 from kivy.app import App
 from kivy.uix.label import Label
 from kivy.uix.gridlayout import GridLayout
-import asyncio
 
 from .colors import *
 from .env import Env
@@ -57,13 +56,6 @@ class EnvMonitor(Env):
         app = App.get_running_app()
         app.root.current = 'load'
 
-    async def start_receiving(self):
-        app = App.get_running_app()
-        while True:
-            data = await app.protocol.receive_data()
-            if data["command"] == "recent_data":
-                self.tempValue.text = str(data['Temperature'])
-                self.humidValue.text = str(data['Humidity'])
-            elif data["command"] == "average_data":
-                self.tempValue.text = str(data['Average Temperature'])
-                self.humidValue.text = str(data['Average Humidity'])
+    def update_data(self, temp, hum):
+        self.tempValue.text = str(temp)
+        self.humidValue.text = str(hum)

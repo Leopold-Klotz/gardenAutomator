@@ -130,7 +130,7 @@ def display_update():
     # close the connection
     connection.close()
 
-    message = {"command": "recent_data", "Temperature": rows[0][1], "Humidity": rows[0][2], "Lights": rows[0][3], "Fan": rows[0][4]}
+    message = {"Temperature": rows[0][1], "Humidity": rows[0][2], "Lights": rows[0][3], "Fan": rows[0][4]}
 
     # return the results
     return message

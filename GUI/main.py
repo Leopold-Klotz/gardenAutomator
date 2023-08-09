@@ -1,8 +1,9 @@
 from kivy.app import App
 from kivy.uix.screenmanager import ScreenManager, NoTransition
 from screens import HomeScreen, LoadScreen, EnvControl, EnvMonitor
+import asyncio
 
-from socket_protocol import SocketProtocol
+from guiDBcommunication import main
 
 class GardenAutomatorApp(App):
     def build(self):
@@ -20,8 +21,13 @@ class GardenAutomatorApp(App):
             self.root.add_widget(screen_instance)
 
         self.root.current = 'home'
-
-        self.protocol = SocketProtocol()
+    
+    def update_data (self):
+        return_message = asyncio.run(main())
+        if return_message['command'] == 'update_display':
+            temp, hum, light, fan = return_message['data'].values()
+            self.screens['envControl'].update_data(light, fan)
+            self.screens['envMonitor'].update_data(temp, hum)
 
 if __name__ == '__main__':
     GardenAutomatorApp().run()

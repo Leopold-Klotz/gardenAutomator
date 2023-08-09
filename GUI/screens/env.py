@@ -3,7 +3,6 @@ from kivy.uix.button import Button
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.app import App
-import asyncio
 
 from .colors import *
 from .base_screen import BaseScreen
@@ -70,13 +69,13 @@ class Env(BaseScreen):
         )
 
         self.subheadingButton = Button(
-            text='Not Connected',
+            text='Update Data',
             size_hint=(None, None),
             size=(225, 50),
             pos_hint={'y': -1, 'right': 1},
             background_color=primary_mid,
             background_normal='',
-            on_press=self.attempt_connection
+            on_press=self.trigger_update
         )
 
         self.subheading.add_widget(self.subheading_text)
@@ -102,10 +101,6 @@ class Env(BaseScreen):
     def add_common_widgets(self):
         self.add_env_widgets()
 
-    def update_connection_status(self, connected):
-        self.subheadingButton.text = "Connected" if connected else "Not Connected"
-
-    def attempt_connection(self, instance):
-        self.subheadingButton.text = "Connecting"
+    def trigger_update(self, instance):
         app = App.get_running_app()
-        asyncio.run(app.protocol.connect())
+        app.update_data()
