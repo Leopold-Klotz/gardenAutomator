@@ -17,7 +17,7 @@ class Sensor():
 
     def measure(self):
         self.sensor_pin.measure()
-        time.sleep(1)
+        # time.sleep(1)
 
         if type == 'dht22':
             measurements = [self.sensor_pin.temperature(), self.sensor_pin.humidity()]
