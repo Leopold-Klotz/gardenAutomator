@@ -1,6 +1,7 @@
 import asyncio
 from asyncio import StreamReader, StreamWriter
 from kivy.app import App
+import json
 
 class SocketProtocol(asyncio.Protocol):
     def __init__(self):
@@ -13,7 +14,7 @@ class SocketProtocol(asyncio.Protocol):
         self.reader = asyncio.StreamReader()
         self.writer = asyncio.StreamWriter(transport, self, self.reader, asyncio.get_running_loop())
 
-        send_task = asyncio.create_task(self.send_data('update_display'))
+        send_task = asyncio.create_task(self.send_data({'update_display': True}))
 
         app = App.get_running_app()
         app.screens['envControl'].update_connection_status(True)
@@ -52,12 +53,12 @@ class SocketProtocol(asyncio.Protocol):
             print('Failed to connect:', str(e))
 
     async def send_data(self, data):
-        self.writer.write(data.encode())
-        await self.writer.drain()
+        json_data = json.dumps(data)  # Convert dictionary to JSON string
+        self.writer.write(json_data.encode())  # Encode the JSON string and send it
 
     async def receive_data(self):
         data = await self.reader.read(1024)
-        return data.decode()
+        return json.loads(data.decode())
 
     async def close(self):
         self.transport.close()
