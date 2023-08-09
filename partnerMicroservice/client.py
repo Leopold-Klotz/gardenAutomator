@@ -22,15 +22,16 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socket:
     #     'Average': 1
     # }
 
-    data = {
-        'History': 1
-    }
+    # data = {
+    #     'History': 1
+    # }
 
     # Send JSON data
     socket.sendall(json.dumps(data).encode())
     message = socket.recv(1026)
-    dec_med = message.decode()
-    final_mes = json.loads(dec_med)
-    print(final_mes)
+    if message:
+        dec_med = message.decode()
+        final_mes = json.loads(dec_med)
+        print(final_mes)
 
 
