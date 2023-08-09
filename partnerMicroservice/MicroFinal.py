@@ -3,6 +3,8 @@ import json
 import sqlite3
 from contextlib import closing
 
+from serverDB import store_data, calculate_average, fetch_history, display_update
+
 # local host and port to be used
 Host = '127.0.0.2'
 Port = 65435
@@ -108,6 +110,8 @@ def start_server():
             with connection:
                 # Receive data
                 data_received = connection.recv(1024)
+                if data_received:
+                    print(data_received)
 
                 # If not data received, restart loop
                 if not data_received:
@@ -115,6 +119,7 @@ def start_server():
 
                 # Parse JSON data
                 data_received = json.loads(data_received.decode())
+                print (data_received)
 
                 if 'Average' in data_received:
                     # Calculate the average based on the hours requested
@@ -141,12 +146,12 @@ def start_server():
                     print('History sent')
 
                 elif 'update_display' in data_received:
-                    # get most recent temp and humidity from database
-                    temp = fetch_history(0)[0]['temperature']
-                    hum = fetch_history(0)[0]['humidity']
+                    print("Sending display update")
+                    message = display_update()
+                    print (message)
+                    connection.sendall(json.dumps(message).encode())
+                    print("Display update sent")
 
-                    # format of response: {"Command": "recent_data, "Temperature": 0, "Humidity": 0}
-                    connection.sendall(json.dumps({"command": "recent_data", "Temperature": temp, "Humidity": hum}).encode())
                 else:
                     # Store data into database
                     store_data(data_received)

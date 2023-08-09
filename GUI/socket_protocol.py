@@ -22,7 +22,10 @@ class SocketProtocol(asyncio.Protocol):
         asyncio.create_task(app.screens['envMonitor'].start_receiving())
 
     def data_received(self, data):
-        print(data.decode())
+        decoded_data = json.loads(data.decode())
+        print("Received:", decoded_data)
+        self.loop.call_soon_threadsafe(self.handle_received_data, decoded_data)
+
 
     def send(self, data):
         self.transport.write(data)
@@ -62,3 +65,15 @@ class SocketProtocol(asyncio.Protocol):
 
     async def close(self):
         self.transport.close()
+
+    def handle_received_data(self, data):
+        print("Received data:", data)  # Print received data for debugging
+        if "update_display" in data:
+            print("Received display update")
+            # Handle the display update logic here
+        elif "other_command" in data:
+            # Handle other commands
+            pass
+        # Add more command handling as needed
+
+
