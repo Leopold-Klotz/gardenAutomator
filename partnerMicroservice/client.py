@@ -2,7 +2,7 @@ import socket
 import json
 
 # Set local host and pick port to use
-HOST = 'localhost'
+HOST = '127.0.0.2'
 PORT = 65435
 
 # Create a socket

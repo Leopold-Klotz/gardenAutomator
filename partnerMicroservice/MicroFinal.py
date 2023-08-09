@@ -4,7 +4,7 @@ import sqlite3
 from contextlib import closing
 
 # local host and port to be used
-Host = 'localhost'
+Host = '127.0.0.2'
 Port = 65435
 
 
@@ -139,6 +139,14 @@ def start_server():
                     # Send the history back to the client
                     connection.sendall(json.dumps(history).encode())
                     print('History sent')
+
+                elif 'update_display' in data_received:
+                    # get most recent temp and humidity from database
+                    temp = fetch_history(0)[0]['temperature']
+                    hum = fetch_history(0)[0]['humidity']
+
+                    # format of response: {"Command": "recent_data, "Temperature": 0, "Humidity": 0}
+                    connection.sendall(json.dumps({"command": "recent_data", "Temperature": temp, "Humidity": hum}).encode())
                 else:
                     # Store data into database
                     store_data(data_received)

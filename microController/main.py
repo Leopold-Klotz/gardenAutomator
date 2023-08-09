@@ -8,10 +8,10 @@ from database import setup_db, store_minute_data, fetch_avg_data, delete_avg_dat
 
 # Set IP's and Ports for communication
 CONTROLLER_IP = '127.0.0.1' # IP address of the main application sending messages to the service
-CONTROLLER_PORT = 12345     # Port number of the main application sending messages to the service
+CONTROLLER_PORT = 65435     # Port number of the main application sending messages to the service
 
 CENTRAL_IP = '127.0.0.2' 
-CENTRAL_PORT = 12345     
+CENTRAL_PORT = 65435     
 
 async def setup():
     setup_db()

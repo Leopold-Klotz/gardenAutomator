@@ -1,15 +1,24 @@
 import asyncio
+from asyncio import StreamReader, StreamWriter
 from kivy.app import App
 
 class SocketProtocol(asyncio.Protocol):
     def __init__(self):
         self.transport = None
+        self.reader: StreamReader = None
+        self.writer: StreamWriter = None
 
     def connection_made(self, transport):
         self.transport = transport
+        self.reader = asyncio.StreamReader()
+        self.writer = asyncio.StreamWriter(transport, self, self.reader, asyncio.get_running_loop())
+
+        send_task = asyncio.create_task(self.send_data('update_display'))
+
         app = App.get_running_app()
         app.screens['envControl'].update_connection_status(True)
         app.screens['envMonitor'].update_connection_status(True)
+        asyncio.create_task(app.screens['envMonitor'].start_receiving())
 
     def data_received(self, data):
         print(data.decode())
@@ -30,7 +39,7 @@ class SocketProtocol(asyncio.Protocol):
             app.screens['envControl'].subheadingButton.text = "Connecting"
             app.screens['envMonitor'].subheadingButton.text = "Connecting"
             loop = asyncio.get_running_loop()
-            connection_coroutine = loop.create_connection(lambda: self, 'localhost', 65435)
+            connection_coroutine = loop.create_connection(lambda: self, '127.0.0.2', 65435)
 
             await asyncio.wait_for(connection_coroutine, timeout=10)
         except asyncio.TimeoutError:
@@ -43,10 +52,11 @@ class SocketProtocol(asyncio.Protocol):
             print('Failed to connect:', str(e))
 
     async def send_data(self, data):
-        self.send(data.encode())
+        self.writer.write(data.encode())
+        await self.writer.drain()
 
     async def receive_data(self):
-        data = await self.transport.read(1024)
+        data = await self.reader.read(1024)
         return data.decode()
 
     async def close(self):

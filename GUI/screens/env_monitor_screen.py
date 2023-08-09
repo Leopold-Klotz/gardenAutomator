@@ -61,5 +61,9 @@ class EnvMonitor(Env):
         app = App.get_running_app()
         while True:
             data = await app.protocol.receive_data()
-            self.tempValue.text = str(data['Temperature'])
-            self.humidValue.text = str(data['Humidity'])
+            if data["command"] == "recent_data":
+                self.tempValue.text = str(data['Temperature'])
+                self.humidValue.text = str(data['Humidity'])
+            elif data["command"] == "average_data":
+                self.tempValue.text = str(data['Average Temperature'])
+                self.humidValue.text = str(data['Average Humidity'])
