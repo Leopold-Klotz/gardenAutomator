@@ -19,6 +19,15 @@ def setup_db():
     )
     """)
 
+    cursor.execute("""
+    CREATE TABLE relay_state (
+        id INTEGER PRIMARY KEY,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+        lights BOOLEAN,
+        fan BOOLEAN
+    )   
+    """)
+
     # commit the changes and close the connection
     connection.commit()
     connection.close()
@@ -42,6 +51,26 @@ def store_data(data):
 
     # return a confirmation message
     return {"message": "Data stored"}
+
+def update_relays(data):
+    # connect to the sqlite database
+    connection = sqlite3.connect('data.db')
+
+    # create a cursor
+    cursor = connection.cursor()
+
+    # insert data into table
+    cursor.execute("""
+    INSERT INTO relay_state (timestamp, lights, fan)
+    VALUES (datetime('now'), ?, ?)
+    """, (data['Lights'], data['Fan']))
+
+    # commit the changes and close the connection
+    connection.commit()
+    connection.close()
+
+    # return a confirmation message
+    return {"message": "Relays updated"}
 
 def calculate_average(hours):
     # connect to the sqlite database
@@ -134,3 +163,6 @@ def display_update():
 
     # return the results
     return message
+
+if __name__ == "__main__":
+    setup_db()

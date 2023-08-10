@@ -1,8 +1,10 @@
 from kivy.app import App
 from kivy.uix.label import Label
 from kivy.uix.switch import Switch
+from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
+from kivy.app import App
 
 from .colors import *
 from .env import Env
@@ -31,12 +33,11 @@ class EnvControl(Env):
             font_size='20sp',
             pos_hint={'center_x': 0.3, 'center_y': 0.5}
         )
-        self.fanSwitch = Switch(
-            active=False,
+        self.fanSwitch = ToggleButton(
+            text='Off',
             size_hint=(0.25, 0.25),
             pos_hint={'center_x': 0.7, 'center_y': 0.5},
-            on_active=self.fan_on,
-            on_inactive=self.fan_off
+            on_press=self.fan_toggle,
         )
         self.fanControl.add_widget(self.fanText)
         self.fanControl.add_widget(self.fanSwitch)
@@ -53,12 +54,11 @@ class EnvControl(Env):
             font_size='20sp',
             pos_hint={'center_x': 0.3, 'center_y': 0.5}
         )
-        self.lightSwitch = Switch(
-            active=False,
+        self.lightSwitch = ToggleButton(
+            text='Off',
             size_hint=(0.25, 0.25),
             pos_hint={'center_x': 0.7, 'center_y': 0.5},
-            on_active=self.light_on,
-            on_inactive=self.light_off
+            on_press=self.light_toggle,
         )
         self.lightControl.add_widget(self.lightText)
         self.lightControl.add_widget(self.lightSwitch)
@@ -71,42 +71,22 @@ class EnvControl(Env):
         app = App.get_running_app()
         app.root.current = 'load'
 
-    def fan_on(self, instance, value):
-        if value:
-            print('Fan is on')
-            self.send_message({'Fan': True})
-        else:
-            print('Fan is off')
-            self.send_message({'Fan': False})
+    def fan_toggle(self, instance):
+        print('The button <%s> is being pressed' % self.fanText.text)
+        app = App.get_running_app()
+        app.update_relays(light=self.lightSwitch.state == "down" , fan=instance.state == 'down')
 
-    def fan_off(self, instance, value):
-        if value:
-            print('Fan is on')
-            self.send_message({'Fan': True})
-        else:
-            print('Fan is off')
-            self.send_message({'Fan': False})
-
-    def light_on(self, instance, value):
-        if value:
-            print('Light is on')
-            self.send_message({'Lights': True})
-        else:
-            print('Light is off')
-            self.send_message({'Lights': False})
-
-    def light_off(self, instance, value):
-        if value:
-            print('Light is on')
-            self.send_message({'Lights': True})
-        else:
-            print('Light is off')
-            self.send_message({'Lights': False})
+    def light_toggle(self, instance):
+        print('The button <%s> is being pressed' % self.lightText.text)
+        app = App.get_running_app()
+        app.update_relays(light=instance.state == 'down', fan=self.fanSwitch.state == 'down')
 
     def send_message(self, message):
         app = App.get_running_app()
         app.protocol.send_data(message)
 
     def update_data(self, light, fan):
-        self.fanSwitch.active = fan
-        self.lightSwitch.active = light
+        self.fanSwitch.text = ("On" if fan else "Off")
+        self.fanSwitch.state = ("down" if fan else "normal")
+        self.lightSwitch.text = ("On" if light else "Off")
+        self.lightSwitch.state = ("down" if light else "normal")

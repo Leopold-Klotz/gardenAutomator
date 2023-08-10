@@ -1,7 +1,7 @@
 import asyncio
 import json
 
-from serverDB import display_update, store_data
+from serverDB import display_update, store_data, update_relays
 
 INTERFACE, SPORT = '127.0.0.3', 65435
 CHUNK = 100
@@ -58,9 +58,23 @@ async def handle_client(reader, writer):
 
     elif message['command'] == 'store_data':
         print("Storing data")
-        store_data(message['data'])
-        print("Data stored")
-        # return_message = {"command": "say_hi", "data": "Hi"}
+        return_message = store_data(message['data'])
+        if return_message:
+            print(return_message['message'])
+        # return_message = {"command": "state_update", "data": "Hi"}
+        # await send_command_message(writer, return_message)  # Send the long message to the client
+
+    elif message['command'] == 'update_relays':
+        print("Updating relays")
+        print(message['data'])
+        return_message = update_relays(message['data'])
+        data = display_update() # {Temperature: 20, Humidity: 30, Light: T, Fan: F}
+        query_message = {"command": "update_display", "data": data}
+        await send_command_message(writer, query_message)  # Send the long message to the client
+        if return_message:
+            print(return_message['message'])
+
+        # return_message = {"command": "state_update", "data": "Hi"}
         # await send_command_message(writer, return_message)  # Send the long message to the client
 
     writer.close()  # Close the connection

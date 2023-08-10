@@ -49,7 +49,9 @@ async def connect(command, command_data = None):
     print(intro)
 
     # Long message to send to the server. Pre-worded for purposes of assignment
-    long_msg = {"command": command}
+    long_msg = {"command": command, "data": command_data}
+
+    print("Sending command: ", long_msg)
 
     await send_command_message(writer, long_msg)  # Send the long message to the server
 
@@ -62,7 +64,7 @@ async def connect(command, command_data = None):
 
 
 async def main(command = "update_display", data = None):
-    return_message = await connect(command)
+    return_message = await connect(command, data)
     return return_message
 
 # Run the `main()` function
