@@ -50,12 +50,17 @@ class MicroControllerEnv():
 
     def connect_to_wifi(self):
         # Connect as Client
+        print("INSIDE WIFI")
+        print(SSID, PSK)
+        
         wlan = network.WLAN(network.STA_IF)
         wlan.active(True)
         wlan.connect(SSID, PSK)
+        
         tries = 4
         # Wait for Connect or Failure
         while tries > 0 and not wlan.isconnected() and wlan.status() >= 0:
+            print("attempt failed")
             tries = tries - 1
             time.sleep(5)
 
@@ -64,6 +69,7 @@ class MicroControllerEnv():
             raise Exception("No Wifi Available")
         
         if wlan.isconnected():
+            print("INSIDE CONNECTED TO WIFI")
             self.connected_to_wifi = True
 
         return wlan

@@ -1,56 +1,70 @@
-import csv
 import os
 
-# Define the file paths for CSV files
-MEASUREMENT_DATA_FILE = 'measurement_data.csv'
-AVERAGE_DATA_FILE = 'average_data.csv'
+# Path to the CSV files
+MEASUREMENTS_CSV = 'measurement_data.csv'
+AVERAGE_CSV = 'average_data.csv'
 
 async def setup_db():
-    # Create the 'measurement_data' file if it doesn't exist
-    if not os.path.exists(MEASUREMENT_DATA_FILE):
-        with open(MEASUREMENT_DATA_FILE, 'w') as f:
-            writer = csv.writer(f)
-            writer.writerow(['temperature', 'humidity'])
+    # Create or overwrite the measurement_data.csv file
+    with open(MEASUREMENTS_CSV, 'w') as file:
+        file.write('temperature,humidity\n')
 
-    # Create the 'average_data' file if it doesn't exist
-    if not os.path.exists(AVERAGE_DATA_FILE):
-        with open(AVERAGE_DATA_FILE, 'w') as f:
-            writer = csv.writer(f)
-            writer.writerow(['temperature', 'humidity', 'lights', 'fan'])
+    # Create or overwrite the average_data.csv file
+    with open(AVERAGE_CSV, 'w') as file:
+        file.write('temperature,humidity,lights,fan\n')
 
-async def store_minute_data(measurements):
-    with open(MEASUREMENT_DATA_FILE, 'a') as f:
-        writer = csv.writer(f)
-        writer.writerow(measurements)
+async def store_second_data(measurements):
+    # Append measurements to the measurement_data.csv file
+    with open(MEASUREMENTS_CSV, 'a') as file:
+        file.write(','.join(map(str, measurements)) + '\n')
 
-async def store_hourly_data(lights, fan):
-    # Read the measurement data file
-    with open(MEASUREMENT_DATA_FILE, 'r') as f:
-        reader = csv.reader(f)
-        data = list(reader)
+    print("Stored second data:", measurements)  # Print when storing second data
+    
+    return measurements  # Return the measurements
 
-    # Calculate the average temperature and humidity
-    if len(data) >= 60:
-        avg_temp = sum(float(row[0]) for row in data) / len(data)
-        avg_humidity = sum(float(row[1]) for row in data) / len(data)
+async def store_minute_data(lights, fan):
+    # Read measurement data from the measurement_data.csv file
+    with open(MEASUREMENTS_CSV, 'r') as file:
+        lines = file.readlines()[1:]  # Skip the header line
+        count = len(lines)
+        if count >= 60:
+            # Calculate the average temperature and humidity
+            sum_temp = sum(float(line.split(',')[0]) for line in lines)
+            sum_humidity = sum(float(line.split(',')[1]) for line in lines)
+            avg_temp = sum_temp / count
+            avg_humidity = sum_humidity / count
 
-        # Append the average data to the average data file
-        with open(AVERAGE_DATA_FILE, 'a') as f:
-            writer = csv.writer(f)
-            writer.writerow([avg_temp, avg_humidity, lights, fan])
+            # Append the average data to the average_data.csv file
+            with open(AVERAGE_CSV, 'a') as avg_file:
+                avg_file.write(f'{avg_temp},{avg_humidity},{lights},{fan}\n')
 
-        # Clear the measurement data file
-        with open(MEASUREMENT_DATA_FILE, 'w') as f:
-            pass
+            # Clear the measurement_data.csv file
+            os.remove(MEASUREMENTS_CSV)
+            with open(MEASUREMENTS_CSV, 'w') as new_file:
+                new_file.write('temperature,humidity\n')
+
+            print("Stored minute data:", avg_temp, avg_humidity, lights, fan)  # Print when storing minute data
 
 async def fetch_avg_data():
-    rows = []
-    if os.path.exists(AVERAGE_DATA_FILE):
-        with open(AVERAGE_DATA_FILE, 'r') as f:
-            reader = csv.reader(f)
-            rows = [row for row in reader]
-    return rows
+    print("in fetch avg")
+    # Read average data from the average_data.csv file
+    data = []
+    with open(AVERAGE_CSV, 'r') as file:
+        print("post open")
+        lines = file.readlines()[1:]  # Skip the header line
+        for line in lines:
+            parts = line.strip().split(',')
+            temp = float(parts[0])
+            humidity = float(parts[1])
+            lights = parts[2] == 'True'
+            fan = parts[3] == 'True'
+            data.append((temp, humidity, lights, fan))
+    return data
+
 
 async def delete_avg_data():
-    if os.path.exists(AVERAGE_DATA_FILE):
-        os.remove(AVERAGE_DATA_FILE)
+    # Delete the average_data.csv file
+    os.remove(AVERAGE_CSV)
+    with open(AVERAGE_CSV, 'w') as file:
+        file.write('temperature,humidity,lights,fan\n')
+
