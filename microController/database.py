@@ -1,115 +1,56 @@
-import sqlite3
-import asyncio
+import csv
+import os
+
+# Define the file paths for CSV files
+MEASUREMENT_DATA_FILE = 'measurement_data.csv'
+AVERAGE_DATA_FILE = 'average_data.csv'
 
 async def setup_db():
-    # Connect to the database or create it if it doesn't exist
-    conn = sqlite3.connect('environment.db')
-    cursor = conn.cursor()
+    # Create the 'measurement_data' file if it doesn't exist
+    if not os.path.exists(MEASUREMENT_DATA_FILE):
+        with open(MEASUREMENT_DATA_FILE, 'w') as f:
+            writer = csv.writer(f)
+            writer.writerow(['temperature', 'humidity'])
 
-    # Create the 'measurement_data' table if it doesn't exist
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS measurement_data (
-            id INTEGER PRIMARY KEY,
-            temperature float NOT NULL,
-            humidity float NOT NULL
-        )
-    ''')
-
-    # Create the 'average_data' table if it doesn't exist
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS entries (
-            id INTEGER PRIMARY KEY,
-            temperature float NOT NULL,
-            humidity float NOT NULL,
-            lights boolean NOT NULL,
-            fan boolean NOT NULL
-        )
-    ''')
-
-    # Commit changes and close the connection
-    conn.commit()
-    conn.close()
+    # Create the 'average_data' file if it doesn't exist
+    if not os.path.exists(AVERAGE_DATA_FILE):
+        with open(AVERAGE_DATA_FILE, 'w') as f:
+            writer = csv.writer(f)
+            writer.writerow(['temperature', 'humidity', 'lights', 'fan'])
 
 async def store_minute_data(measurements):
-    # Connect to the database
-    conn = sqlite3.connect('environment.db')
-    cursor = conn.cursor()
+    with open(MEASUREMENT_DATA_FILE, 'a') as f:
+        writer = csv.writer(f)
+        writer.writerow(measurements)
 
-    # Insert the measurements into the 'measurement_data' table
-    cursor.execute('''
-        INSERT INTO measurement_data (temperature, humidity)
-        VALUES (?, ?)
-    ''', measurements)
+async def store_hourly_data(lights, fan):
+    # Read the measurement data file
+    with open(MEASUREMENT_DATA_FILE, 'r') as f:
+        reader = csv.reader(f)
+        data = list(reader)
 
-    # Commit changes and close the connection
-    conn.commit()
-    conn.close()
+    # Calculate the average temperature and humidity
+    if len(data) >= 60:
+        avg_temp = sum(float(row[0]) for row in data) / len(data)
+        avg_humidity = sum(float(row[1]) for row in data) / len(data)
 
-async def store_minute_data(lights, fan):
-    # Connect to the database
-    conn = sqlite3.connect('environment.db')
-    cursor = conn.cursor()
+        # Append the average data to the average data file
+        with open(AVERAGE_DATA_FILE, 'a') as f:
+            writer = csv.writer(f)
+            writer.writerow([avg_temp, avg_humidity, lights, fan])
 
-    # if length of measurement_data is greater than or equal to 60 average and store in average_data
-    cursor.execute('''
-        SELECT COUNT(*)
-        FROM measurement_data
-    ''')
-
-    # Fetch the result
-    count = cursor.fetchone()
-
-    if count >= 60:
-        # Calculate the average temperature and humidity during the provided hours
-        cursor.execute('''
-            SELECT AVG(temperature), AVG(humidity)
-            FROM measurement_data
-        ''')
-
-        # Fetch the result
-        avg_temp, avg_humidity = cursor.fetchone()
-
-        # Insert the measurements into the 'measurement_data' table
-        cursor.execute('''
-            INSERT INTO entries (temperature, humidity, lights, fan)
-            VALUES (?, ?, ?, ?)
-        ''', (avg_temp, avg_humidity, lights, fan))
-
-        # Delete the entries from the 'measurement_data' table
-        cursor.execute('''
-            DELETE FROM measurement_data
-        ''')
-
-    # Commit changes and close the connection
-    conn.commit()
-    conn.close()
+        # Clear the measurement data file
+        with open(MEASUREMENT_DATA_FILE, 'w') as f:
+            pass
 
 async def fetch_avg_data():
-    # Connect to the database
-    conn = sqlite3.connect('environment.db')
-    cursor = conn.cursor()
-
-    cursor.execute('''
-        SELECT * FROM average_data
-    ''')
-    
-    # Fetch all the results
-    rows = cursor.fetchall()
-
-    cursor.close()
-    conn.close()
+    rows = []
+    if os.path.exists(AVERAGE_DATA_FILE):
+        with open(AVERAGE_DATA_FILE, 'r') as f:
+            reader = csv.reader(f)
+            rows = [row for row in reader]
     return rows
 
 async def delete_avg_data():
-    # Connect to the database
-    conn = sqlite3.connect('environment.db')
-    cursor = conn.cursor()
-
-    cursor.execute('''
-        DELETE FROM average_data
-    ''')
-
-    # Commit changes and close the connection
-    conn.commit()
-    conn.close()
-
+    if os.path.exists(AVERAGE_DATA_FILE):
+        os.remove(AVERAGE_DATA_FILE)

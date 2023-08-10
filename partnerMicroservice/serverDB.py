@@ -69,6 +69,9 @@ def update_relays(data):
     connection.commit()
     connection.close()
 
+    # trigger a message to the microcontroller to update the relays
+    
+
     # return a confirmation message
     return {"message": "Relays updated"}
 
