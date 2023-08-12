@@ -16,6 +16,7 @@ class MicroControllerEnv():
         self.connected_to_wifi = False
         self.sensors = []
         self.relays = []
+        self.wlan = None
 
     def add_sensor(self, name, type, pin):
         self.sensors.append(Sensor(name, type, pin))
@@ -48,11 +49,8 @@ class MicroControllerEnv():
         return None
     
 
-    def connect_to_wifi(self):
-        # Connect as Client
-        print("INSIDE WIFI")
-        print(SSID, PSK)
-        
+    async def connect_to_wifi(self):
+        # Connect as Client        
         wlan = network.WLAN(network.STA_IF)
         wlan.active(True)
         wlan.connect(SSID, PSK)
@@ -66,15 +64,16 @@ class MicroControllerEnv():
 
         # Throw Exception on Fail
         if tries == 0 or wlan.status() < 0 or not wlan.isconnected():
+            print("WIFI connection failed")
             raise Exception("No Wifi Available")
         
         if wlan.isconnected():
-            print("INSIDE CONNECTED TO WIFI")
+            print("WIFI connection established")
             self.connected_to_wifi = True
-
-        return wlan
+        
+        self.wlan = wlan
     
-    def disconnect_from_wifi(self, wlan):
+    async def disconnect_from_wifi(self, wlan):
         try:
             wlan.active(False)
         except Exception as e:

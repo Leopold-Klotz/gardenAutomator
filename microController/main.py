@@ -2,6 +2,8 @@ import uasyncio as asyncio
 import json
 import socket
 
+import urequests
+
 from microControllerEnv import MicroControllerEnv
 
 from database import setup_db, store_second_data, fetch_avg_data, delete_avg_data, store_minute_data
@@ -26,7 +28,7 @@ async def setup():
 
 # Helper function that converts an integer into a string of 8 hexadecimal digits
 # Assumption: integer fits in 8 hexadecimal digits
-def to_hex(number):
+async def to_hex(number):
     # Verify our assumption: error is printed and program exists if assumption is violated
     assert number <= 0xffffffff, "Number too large"
     return "{:08x}".format(number)
@@ -43,15 +45,17 @@ async def send_command_message(conn, message):
     await conn.drain()  # Wait until the buffer is empty
 
 async def send_to_cloud(message):
-    # Serialize the message dictionary to a JSON string
-    message_json = json.dumps(message)
     print("INSIDE CLOUD")
+    print("Checking wifi connection:")
+    r = urequests.get("http://date.jsontest.com")
+    print(r.json())
 
     try:
+        # CONFIRMED, CONNECTED TO WIFI AT THIS POINT
         # Create a socket object
         reader, writer = await asyncio.open_connection(CENTRAL_IP, CENTRAL_PORT)
 
-        await send_command_message(writer, data)
+        await send_command_message(writer, message)
         await writer.drain()  # Wait until the buffer is empty
         writer.close()
         await writer.wait_closed()
@@ -65,7 +69,7 @@ async def send_to_cloud(message):
 
 async def measurements(gardenOne):
     while True:
-        for _ in range(60):
+        for _ in range(5):
             await store_second_data(gardenOne.get_sensor("envDHT22").measure())
             await asyncio.sleep(1)
 
@@ -86,12 +90,10 @@ async def measurements(gardenOne):
         print('wifi check: ', gardenOne.connected_to_wifi)
         
         if gardenOne.connected_to_wifi:
-            print("INSIDE IF")
             # get all entries in average_data table and send to cloud
             avg_data = await fetch_avg_data()
             print(avg_data)
             for entry in avg_data:
-                print("DEBUG: Entry: ", entry)
                 message = {
                     "Temperature": entry[0],
                     "Humidity": entry[1],
@@ -99,6 +101,7 @@ async def measurements(gardenOne):
                     "Fan": entry[3]
                 }
                 print("precloud")
+                print("message: ", message)
                 await send_to_cloud(message)
                 print("postcloud")
             # delete all entries in average_data table
