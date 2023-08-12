@@ -64,8 +64,12 @@ async def connect(command, command_data = None):
 
 
 async def main(command = "update_display", data = None):
-    return_message = await connect(command, data)
-    return return_message
+    try:
+        return_message = await connect(command, data)
+        return return_message
+    except ConnectionRefusedError:
+        print("Connection refused. Is the server running?")
+        return ConnectionRefusedError
 
 # Run the `main()` function
 if __name__ == "__main__":

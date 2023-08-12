@@ -3,7 +3,7 @@ import json
 
 from serverDB import display_update, store_data, update_relays
 
-INTERFACE, SPORT = '127.0.0.3', 65435
+INTERFACE, SPORT = '0.0.0.0', 65435
 CHUNK = 100
 
 # Helper function that converts an integer into a string of 8 hexadecimal digits
@@ -80,6 +80,7 @@ async def handle_client(reader, writer):
     writer.close()  # Close the connection
 
 async def main():
+    print("Starting server")
     server = await asyncio.start_server(handle_client, INTERFACE, SPORT)  # Create the server
 
     async with server:  # Start the server
