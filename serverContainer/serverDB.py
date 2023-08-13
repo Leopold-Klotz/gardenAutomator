@@ -1,13 +1,10 @@
 import sqlite3
 
+# Function creates the database and tables
 def setup_db():
-    # connect to the sqlite database
     connection = sqlite3.connect('data.db')
-
-    # create a cursor
     cursor = connection.cursor()
 
-    # create table
     cursor.execute("""
     CREATE TABLE sensor_data (
         id INTEGER PRIMARY KEY,
@@ -28,127 +25,97 @@ def setup_db():
     )   
     """)
 
-    # commit the changes and close the connection
     connection.commit()
     connection.close()
 
+# Function stores the up-to-date data in the database
 def store_data(data):
-    # connect to the sqlite database
     connection = sqlite3.connect('data.db')
-
-    # create a cursor
     cursor = connection.cursor()
 
-    # insert data into table
     cursor.execute("""
     INSERT INTO sensor_data (timestamp, temperature, humidity, lights, fan)
     VALUES (datetime('now'), ?, ?, ?, ?)
     """, (data['Temperature'], data['Humidity'], data['Lights'], data['Fan']))
 
-    # commit the changes and close the connection
     connection.commit()
     connection.close()
 
     # return a confirmation message
     return {"message": "Data stored"}
 
+# Function updates the relays
 def update_relays(data):
-    # connect to the sqlite database
     connection = sqlite3.connect('data.db')
-
-    # create a cursor
     cursor = connection.cursor()
 
-    # insert data into table
     cursor.execute("""
     INSERT INTO relay_state (timestamp, lights, fan)
     VALUES (datetime('now'), ?, ?)
     """, (data['Lights'], data['Fan']))
 
-    # commit the changes and close the connection
+    # change most recent data in sensor_data
+    cursor.execute("""
+    UPDATE sensor_data
+    SET lights = ?, fan = ?
+    WHERE id = (SELECT MAX(id) FROM sensor_data)
+    """, (data['Lights'], data['Fan']))
+
     connection.commit()
     connection.close()
-
-    # trigger a message to the microcontroller to update the relays
-    
 
     # return a confirmation message
     return {"message": "Relays updated"}
 
+# Function returns the average temperature and humidity during the provided hours
 def calculate_average(hours):
-    # connect to the sqlite database
     connection = sqlite3.connect('data.db')
-
-    # create a cursor
     cursor = connection.cursor()
 
-    # calculate the average temperature and humidity during the provided hours
     cursor.execute("""
     SELECT AVG(temperature), AVG(humidity)
     FROM sensor_data
     WHERE timestamp > datetime('now', '-{} hours')
-    """.format(hours))  # only selects values after the hours provided
+    """.format(hours)) 
 
-    # fetch the result
     avg_temp, avg_humidity = cursor.fetchone()
-
-    # close the connection
     connection.close()
-
-    # return the averages
     return {'Average Temperature': avg_temp, 'Average Humidity': avg_humidity}
 
+# Function returns the data over the provided hours
 def fetch_history(hours):
-    # connect to the sqlite database
     connection = sqlite3.connect('data.db')
-
-    # create a cursor
     cursor = connection.cursor()
 
-    # only selects values after the hours provided
     cursor.execute("""
     SELECT timestamp, temperature, humidity, lights, fan
     FROM sensor_data
     WHERE timestamp > datetime('now', '-{} hours')
     """.format(hours))
 
-    # fetch all the results
     rows = cursor.fetchall()
-
-    # close the connection
     connection.close()
-
-    # return the results
     return rows
 
+# Function deletes the data over the provided hours
 def delete_history(hours):
-    # connect to the sqlite database
     connection = sqlite3.connect('data.db')
-
-    # create a cursor
     cursor = connection.cursor()
 
-    # only selects values after the hours provided
     cursor.execute("""
     DELETE FROM sensor_data
     WHERE timestamp > datetime('now', '-{} hours')
     """.format(hours))
 
-    # commit the changes and close the connection
     connection.commit()
     connection.close()
-
-    # return a confirmation message
     return {"message": "Data deleted"}
 
+# Function returns the most recent data
 def display_update():
-    # connect to the sqlite database
     connection = sqlite3.connect('data.db')
-
-    # create a cursor
     cursor = connection.cursor()
 
-    # only selects values after the hours provided
     cursor.execute("""
     SELECT timestamp, temperature, humidity, lights, fan
     FROM sensor_data
@@ -156,15 +123,9 @@ def display_update():
     LIMIT 1
     """)
 
-    # fetch all the results
     rows = cursor.fetchall()
-
-    # close the connection
     connection.close()
-
     message = {"Temperature": rows[0][1], "Humidity": rows[0][2], "Lights": rows[0][3], "Fan": rows[0][4]}
-
-    # return the results
     return message
 
 if __name__ == "__main__":
