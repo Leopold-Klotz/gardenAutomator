@@ -87,7 +87,7 @@ async def handle_client(reader, writer):
         if message['command'] == 'update_relays_mc':
             print("Updating relays")
             print(message['data'])
-            update_relays(message['data'])
+            await update_relays(message['data'])
             
     except Exception as e:
         print("Error handling client:", e)
