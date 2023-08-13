@@ -34,6 +34,8 @@ class GardenAutomatorApp(App):
                 self.screens['envMonitor'].update_data(temp, hum)
     
     def update_relays(self, light = False, fan = False):
+        self.screens['envControl'].update_data(light, fan)
+
         return_message = asyncio.run(main("update_relays", {"Lights": light, "Fan": fan}))
         if return_message == ConnectionRefusedError:
             print("Server unable to connect, please try again later.")
@@ -41,7 +43,6 @@ class GardenAutomatorApp(App):
         else:
             if return_message['command'] == 'update_display':
                 temp, hum, new_light, new_fan = return_message['data'].values()
-                self.screens['envControl'].update_data(new_light, new_fan)
                 self.screens['envMonitor'].update_data(temp, hum)
         
 

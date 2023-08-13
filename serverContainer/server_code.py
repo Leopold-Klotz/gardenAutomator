@@ -4,6 +4,7 @@ import json
 from serverDB import display_update, store_data, update_relays
 
 INTERFACE, SPORT = '0.0.0.0', 65435
+Controller_IP, Controller_PORT = '127.0.0.4', 65435
 CHUNK = 100
 
 # Helper function that converts an integer into a string of 8 hexadecimal digits
@@ -65,6 +66,7 @@ async def handle_client(reader, writer):
         # await send_command_message(writer, return_message)  # Send the long message to the client
 
     elif message['command'] == 'update_relays':
+        await send_to_controller(message)
         print("Updating relays")
         print(message['data'])
         return_message = update_relays(message['data'])
@@ -78,6 +80,18 @@ async def handle_client(reader, writer):
         # await send_command_message(writer, return_message)  # Send the long message to the client
 
     writer.close()  # Close the connection
+
+async def send_to_controller(message):
+    try:
+        reader, writer = await asyncio.open_connection(Controller_IP, Controller_PORT)
+
+        await send_command_message(writer, message)
+        writer.close()
+        await writer.wait_closed()
+        print("Relayed message to controller:", message)  # Print when sending to microcontroller
+
+    except Exception as e:
+        print("Error sending to controller:", e)
 
 async def main():
     print("Starting server")
