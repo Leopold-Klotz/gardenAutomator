@@ -68,7 +68,8 @@ async def handle_client(reader, writer):
 
     # GUI asks to turn on/off the lights and/or fan
     elif message['command'] == 'update_relays':
-        await send_to_controller(message) # relay the message to the MicroController
+        forwarding_message = {"command": "update_relays_mc", "data": message['data']}
+        await send_to_controller(forwarding_message) # relay the message to the MicroController
         print("Updating relays")
         print(message['data'])
         return_message = update_relays(message['data'])

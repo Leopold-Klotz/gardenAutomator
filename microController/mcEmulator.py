@@ -7,47 +7,46 @@ IP, DPORT = '127.0.0.3', 65435
 REC_IP, REC_PORT = '127.0.0.4', 65435
 
 # Helper function that converts an integer into a string of 8 hexadecimal digits
-# Assumption: integer fits in 8 hexadecimal digits
 def to_hex(number):
-    # Verify our assumption: error is printed and program exits if assumption is violated
     assert number <= 0xffffffff, "Number too large"
     return "{:08x}".format(number)
 
+# Function sends a message to the client. Sends the length of the message first, then the message itself.
 async def send_command_message(conn, message):
-    await asyncio.sleep(1)  # Add a delay to simulate network latency
+    await asyncio.sleep(1) 
 
-    message_json = json.dumps(message)  # Convert the dictionary to a JSON-encoded string
+    message_json = json.dumps(message)  # dict -> JSON string
     message_length = len(message_json)
 
-    conn.write(to_hex(message_length).encode())  # Write the length of the message to the connection
-    conn.write(message_json.encode())  # Write the message to the connection
+    conn.write(to_hex(message_length).encode())  # send length of message first
+    conn.write(message_json.encode())  
+    await conn.drain() 
 
-    await conn.drain()  # Wait until the buffer is empty
-
+# Function sends a message to the server when it connects to the MicroController
 async def send_connection_message(conn):
     connection_message = "Connected to Garden MicroController\n"
+    conn.write(connection_message.encode()) 
+    await conn.drain()  
 
-    conn.write(connection_message.encode())  # Write the intro message to the connection
-    await conn.drain()  # Wait until all data is sent
-
+# Function receives a message from the client. Takes the length of the message first, then the message itself.
 async def receive_command_message(conn):
     print("Waiting for Command")
-    data_length_hex = await conn.readexactly(8)  # Read 8 bytes from the connection to get the message length
+    data_length_hex = await conn.readexactly(8)  # Read 8 bytes for length
 
-    # Convert hex bytes to a string and then to an integer
-    data_length = int(data_length_hex.decode(), 16)
+    data_length = int(data_length_hex.decode(), 16) # hex -> string -> integer
 
-    full_data = await conn.readexactly(data_length)  # Read the full data from the connection
+    full_data = await conn.readexactly(data_length) 
 
-    message_json = full_data.decode()  # Convert the data to a JSON-encoded string
-    message = json.loads(message_json)  # Convert the JSON-encoded string to a dictionary
-
+    message_json = full_data.decode()  
+    message = json.loads(message_json)  # json string -> dictionary
     return message
 
+# Function simulates the readings of a temperature and humidity sensor and it sends the data to the server
 async def generate_and_send_data():
     while True:
         reader, writer = await asyncio.open_connection(IP, DPORT)
 
+        # Randomized the data for purposes of the demo
         data = {
             'command': 'store_data',
             'data': {
@@ -64,23 +63,26 @@ async def generate_and_send_data():
 
         print("Data sent:", data)
 
-        await asyncio.sleep(60)  # Wait for 1 minute
+        await asyncio.sleep(60)  # Send data every minute
 
+# Function spins up a server to receive messages from the central server
 async def receive_messages():
     server = await asyncio.start_server(handle_client, REC_IP, REC_PORT)
     async with server:
         await server.serve_forever()
 
+# Function shows when the update relay command is received from the central server
 async def update_relays(data):
     print(data)
     print("RELAYS UPDATED")
     return
 
+# Function handles client connections. Receives a command from the client and executes the proper function and response.
 async def handle_client(reader, writer):
     try:
-        await send_connection_message(writer)  # Send the intro message to the client
-        message = await receive_command_message(reader)  # Receive the long message from the client
-        print(message)  # Print the message to the screen
+        await send_connection_message(writer)  
+        message = await receive_command_message(reader) 
+        print(message) 
 
         if message['command'] == 'update_relays_mc':
             print("Updating relays")
@@ -92,6 +94,7 @@ async def handle_client(reader, writer):
     finally:
         writer.close()
 
+# Function asynchronously runs the two tasks allowing the generation of data and the receiving of commands. 
 async def main():
     send_task = asyncio.create_task(generate_and_send_data())
     receive_task = asyncio.create_task(receive_messages())
